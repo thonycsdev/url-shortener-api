@@ -15,13 +15,9 @@ namespace WebApi.Controllers
         [HttpPost("/makeItShort")]
         public async Task<IActionResult> MakeUrlShort(string url)
         {
-            var shortUrl = await _service.MakeItShort(url);
-            return Ok(new QuickDTO { URL = shortUrl });
+            var response = await _service.MakeItShort(url);
+            return Ok(response);
         }
     }
 
-    public class QuickDTO
-    {
-        public string URL { get; set; } = string.Empty;
-    }
 }

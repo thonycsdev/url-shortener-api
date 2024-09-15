@@ -18,7 +18,7 @@ namespace WebApi.Controllers
         {
             var requested = HttpContext.Request.Path;
             var baseUrl = await _service.FindBaseUrlByShortGuid(requested.ToString().Split('/')[1]);
-            return Redirect(baseUrl);
+            return Redirect(baseUrl.URL);
         }
     }
 }

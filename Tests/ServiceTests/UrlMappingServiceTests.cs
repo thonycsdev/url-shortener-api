@@ -28,7 +28,7 @@ namespace Tests.ServiceTests
             string shortGuid = CreateUtils.CreateRandomShortGuid();
             _mockRepository.Setup(x => x.GetBy(It.IsAny<Expression<Func<UrlMapping, bool>>>()));
             var result = await service.FindBaseUrlByShortGuid(shortGuid);
-            result.Should().Be("UrlNotFound");
+            result.URL.Should().Be("UrlNotFound");
         }
 
         [Fact]
@@ -39,12 +39,21 @@ namespace Tests.ServiceTests
             var urlMappingFixture = fixture.Create<UrlMapping>();
             _mockRepository.Setup(x => x.GetBy(It.IsAny<Expression<Func<UrlMapping, bool>>>())).ReturnsAsync(urlMappingFixture);
             var result = await service.FindBaseUrlByShortGuid(urlMappingFixture.RouteId);
-            result.Should().Be(urlMappingFixture.BaseUrl);
+            result.URL.Should().Be(urlMappingFixture.BaseUrl);
         }
+
         [Fact]
-        public async void WhenUrlBaseAlreadyHasAHashIdInDatabase_ShouldReturnTheShortenedUrl()
+        public async void WhenUrlBaseAlreadyHasAHashIdInDatabase_ShouldReturnTheShortenedUrl_AndNotCallSave()
         {
 
+            var service = new UrlMappingService(_mockRepository.Object, _hashService.Object);
+            var urlMappingFixture = fixture.Create<UrlMapping>();
+
+            _hashService.Setup(x => x.CreateHashId(It.IsAny<string>())).ReturnsAsync("hashId");
+            _mockRepository.Setup(x => x.GetBy(It.IsAny<Expression<Func<UrlMapping, bool>>>())).ReturnsAsync(urlMappingFixture);
+            var result = await service.MakeItShort(urlMappingFixture.BaseUrl);
+            result.URL.Should().Be(urlMappingFixture.ShortenedUrl);
+            _mockRepository.Verify(x => x.Save(It.IsAny<UrlMapping>()), Times.Never());
         }
     }
 }

@@ -1,5 +1,6 @@
 using Domain.Entities;
 using Repository.Interfaces;
+using Service.DTO;
 using Service.Interfaces;
 using Service.Utils;
 
@@ -15,23 +16,31 @@ namespace Service.Services
             _hashService = hashService;
         }
 
-        public async Task<string> FindBaseUrlByShortGuid(string shortGuid)
+        //Dado um short guid ( final da url reduzida ) deve procurar por essa chave, e retornar a url base 
+        public async Task<UrlMappingResponse> FindBaseUrlByShortGuid(string shortGuid)
         {
             var result = await _repository.GetBy(x => x.RouteId == shortGuid);
-            if (result is null) return "UrlNotFound";
-            return result.BaseUrl;
+            if (result is null) return new UrlMappingResponse { URL = "UrlNotFound" };
+            return new UrlMappingResponse { URL = result.BaseUrl };
         }
 
-        public async Task<string> MakeItShort(string urlBase)
+        //verifica se a url foi reduzida
+        // se ja foi reduzida retorna o valor reduzido
+        // se nao
+        // reduz e salva o valor o banco
+
+        public async Task<UrlMappingResponse> MakeItShort(string urlBase)
         {
             var hashId = await _hashService.CreateHashId(urlBase);
             var result = await _repository.GetBy(x => x._id == hashId);
-            if (result is not null) return result.ShortenedUrl;
+            if (result is not null) return new UrlMappingResponse { URL = result.ShortenedUrl };
 
             UrlMapping urlMapping = BuildUrlMapping(urlBase, hashId);
             await _repository.Save(urlMapping);
-            return urlMapping.ShortenedUrl;
+            return new UrlMappingResponse { URL = urlMapping.ShortenedUrl };
         }
+
+        //constroi o valor do urlmapping
 
         private static UrlMapping BuildUrlMapping(string urlBase, string hashId)
         {
